@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+  <!-- ================== HEAD / METADATOS ================== -->
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pronóstico del clima — Starter</title>
+
+  <!-- ============== ESTILOS GLOBALES DEL PROYECTO ============== -->
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+
+<body>
+  <!-- ================== ENCABEZADO ================== -->
+  <header class="container header">
+    <h1>Pronóstico del clima</h1>
+    <p class="muted">Buscá una ciudad y mirá el clima actual y los próximos días.</p>
+  </header>
+
+  <!-- ================== CONTENIDO PRINCIPAL ================== -->
+  <main class="container">
+    <!-- ========== BUSCADOR / FORMULARIO ========== -->
+    <!-- El form dispara la búsqueda y muestra loader/errores -->
+    <form id="search-form" class="search" autocomplete="off">
+      <!-- Etiqueta accesible para lectores de pantalla -->
+      <label for="city" class="sr-only">Ciudad</label>
+
+      <!-- Campo de texto con la ciudad -->
+      <input id="city" name="city" placeholder="Ej: Buenos Aires" autocomplete="off" />
+
+      <!-- Botón para enviar el form -->
+      <button type="submit" id="btn-search">Buscar</button>
+
+      <!-- Toggle de unidades °C / °F -->
+      <div class="unit">
+        <button type="button" id="unit-c" aria-pressed="true">°C</button>
+        <button type="button" id="unit-f" aria-pressed="false">°F</button>
+      </div>
+
+      <!-- Indicador de carga (se muestra/oculta desde JS) -->
+      <div id="loader" aria-live="polite" class="loader" hidden>Cargando…</div>
+    </form>
+    
+      <!-- ========== HISTORIAL DE BÚSQUEDAS ========== -->
+  <section id="history" class="history"></section>
+
+    <!-- ========== ZONA DE ESTADOS (mensajes de info/error) ========== -->
+    <section id="status" class="status" aria-live="polite"></section>
+
+    <!-- ========== CLIMA ACTUAL (se llena por JS) ========== -->
+    <section id="current" class="card" hidden></section>
+
+    <!-- ========== PRONÓSTICO DIARIO (se llena por JS) ========== -->
+    <section id="daily" class="grid" hidden></section>
+  </main>
+
+  <!-- ================== PIE ================== -->
+  <footer class="container footer">
+    <small class="muted">
+      Datos por <a href="https://open-meteo.com/" target="_blank" rel="noreferrer">Open-Meteo</a>
+      • Zona horaria: America/Argentina/Buenos_Aires
+    </small>
+  </footer>
+
+  <!-- ============== JAVASCRIPT PRINCIPAL ============== -->
+  <script type="module" src="./main.js"></script>
+</body>
+
+</html>
