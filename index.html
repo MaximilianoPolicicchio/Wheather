@@ -11,60 +11,60 @@
   <link rel="stylesheet" href="./styles.css" />
 </head>
 
-<body>
-  <!-- ================== ENCABEZADO ================== -->
-  <header class="container header">
-    <h1>Pronóstico del clima</h1>
-    <p class="muted">Buscá una ciudad y mirá el clima actual y los próximos días.</p>
-  </header>
 
-  <!-- ================== CONTENIDO PRINCIPAL ================== -->
-  <main class="container">
-    <!-- ========== BUSCADOR / FORMULARIO ========== -->
-    <!-- El form dispara la búsqueda y muestra loader/errores -->
-    <form id="search-form" class="search" autocomplete="off">
-      <!-- Etiqueta accesible para lectores de pantalla -->
+
+<!-- HERO con fondo -->
+<section class="hero">
+  <div class="container">
+    <header class="header">
+      <h1>Pronóstico del clima</h1>
+      <p class="muted">Buscá una ciudad y mirá el clima actual y los próximos días.</p>
+    </header>
+
+    <!-- Buscador dentro del hero -->
+    <form id="search-form" class="search search--hero" autocomplete="off">
       <label for="city" class="sr-only">Ciudad</label>
-
-      <!-- Campo de texto con la ciudad -->
-      <input id="city" name="city" placeholder="Ej: Buenos Aires" autocomplete="off" />
-
-      <!-- Botón para enviar el form -->
+      <input id="city" name="city" placeholder="Buscar" autocomplete="off" />
       <button type="submit" id="btn-search">Buscar</button>
-
-      <!-- Toggle de unidades °C / °F -->
       <div class="unit">
         <button type="button" id="unit-c" aria-pressed="true">°C</button>
         <button type="button" id="unit-f" aria-pressed="false">°F</button>
       </div>
-
-      <!-- Indicador de carga (se muestra/oculta desde JS) -->
       <div id="loader" aria-live="polite" class="loader" hidden>Cargando…</div>
     </form>
-    
-      <!-- ========== HISTORIAL DE BÚSQUEDAS ========== -->
-  <section id="history" class="history"></section>
+  </div>
+</section>
 
-    <!-- ========== ZONA DE ESTADOS (mensajes de info/error) ========== -->
-    <section id="status" class="status" aria-live="polite"></section>
+<!-- ✅ Ubicaciones recientes AFUERA del hero -->
+<section class="container">
+  <h3 class="section-title">UBICACIONES RECIENTES</h3>
+  <section id="recent" class="recent"></section>
+</section>
 
-    <!-- ========== CLIMA ACTUAL (se llena por JS) ========== -->
-    <section id="current" class="card" hidden></section>
 
-    <!-- ========== PRONÓSTICO DIARIO (se llena por JS) ========== -->
-    <section id="daily" class="grid" hidden></section>
-  </main>
+<!-- Ubicaciones recientes (se llena con el historial) -->
+<section class="container">
+  <h3 class="section-title">UBICACION BUSCADA:</h3>
+  <section id="recent" class="recent"></section>
+</section>
 
-  <!-- ================== PIE ================== -->
-  <footer class="container footer">
-    <small class="muted">
-      Datos por <a href="https://open-meteo.com/" target="_blank" rel="noreferrer">Open-Meteo</a>
-      • Zona horaria: America/Argentina/Buenos_Aires
-    </small>
-  </footer>
+<!-- Estado + resultados -->
+<main class="container">
+  <section id="status" class="status" aria-live="polite"></section>
+  <section id="current" class="card" hidden></section>
+  <section id="daily" class="grid" hidden></section>
+</main>
 
-  <!-- ============== JAVASCRIPT PRINCIPAL ============== -->
-  <script type="module" src="./main.js"></script>
+<footer class="container footer">
+  <small class="muted">Datos por <a href="https://open-meteo.com/" target="_blank" rel="noreferrer">Open-Meteo</a> •
+    Zona horaria: America/Argentina/Buenos_Aires</small>
+</footer>
+
+<script type="module" src="./main.js"></script>
+<h3 class="section-title">WHEATHER</h3>
+<section id="recent" class="recent"></section>
+
 </body>
+
 
 </html>

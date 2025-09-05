@@ -216,28 +216,39 @@ async function searchCity(city) {
   const key = city.trim().toLowerCase();
   if (!key) return;
 
+
   // Si ya existe en cache, evitamos pedir de nuevo
   if (cache.has(key)) {
     const { place, data } = cache.get(key);
+
+    // 👇 Alias extra: guardamos también por el "place" bonito (Buenos Aires, ...)
+    cache.set(place.toLowerCase(), { place, data });
+
     render(place, data);
-    addToHistory(place);  // <<--- importante: también desde cache
+    addToHistory(place);
+    renderRecentFromHistory(); // 👈 refrescamos tarjetas recientes
     setStatus('');
     return;
   }
+
 
   // Cancelamos cualquier request anterior en curso
   controller?.abort();
   controller = new AbortController();
 
   try {
-    setLoading(true);
-    setStatus('Buscando…');
     const geo = await geocodeCity(key, controller.signal);
     const data = await fetchForecast(geo, controller.signal);
-    cache.set(key, { place: geo.place, data }); // guardamos en cache
+
+    // 👇 Guardar con dos claves: lo tipeado y el "place" completo
+    cache.set(key, { place: geo.place, data });
+    cache.set(geo.place.toLowerCase(), { place: geo.place, data }); // 👈 alias
+
     render(geo.place, data);
-    addToHistory(geo.place); // <<--- importante: al completar fetch OK
+    addToHistory(geo.place);
+    renderRecentFromHistory(); // 👈 ACTUALIZAR tarjetas
     setStatus('');
+
   } catch (err) {
     if (err.name === 'AbortError') return; // se canceló por una nueva búsqueda
     setStatus(err.message || 'Ocurrió un error', 'error');
@@ -285,10 +296,71 @@ if (unitCBtn && unitFBtn) {
     if (cached) render(cached.place, cached.data);
   });
 }
+// ========== RECENTES (tarjetas tipo AccuWeather) ==========
+const recentEl = document.getElementById('recent');
+
+function splitPlace(place) {
+  // "Buenos Aires, Buenos Aires, Argentina" -> {city, region, country}
+  const parts = place.split(',').map(s => s.trim());
+  return {
+    city: parts[0] || place,
+    region: parts[1] || "",
+    country: parts[2] || parts[1] || ""
+  };
+}
+
+function renderRecentFromHistory() {
+  if (!recentEl) return;
+  const list = getHistory(); // ya la tenés por el historial
+  if (!list.length) {
+    recentEl.innerHTML = "";
+    return;
+  }
+  // hasta 4 tarjetas
+  const top = list.slice(0, 4);
+  recentEl.innerHTML = top.map((place) => {
+    // Si hay datos cacheados, mostramos temp/icono
+    const key = place.toLowerCase();
+    const cached = cache.get(key);
+    const { city, country } = splitPlace(place);
+    let tempHtml = `<span class="rc-temp">—</span>`;
+    let metaHtml = `<span class="rc-meta">RealFeel —</span>`;
+    let icon = "⛅";
+
+    if (cached?.data?.current) {
+      const cur = cached.data.current;
+      tempHtml = `<span class="rc-temp">${asTemp(cur.temperature_2m)}</span>`;
+      metaHtml = `<span class="rc-meta">RealFeel ${asTemp(cur.apparent_temperature)}</span>`;
+      icon = WMO_ICON(cur.weather_code);
+    }
+
+    return `
+      <article class="recent-card" data-city="${place}">
+        <h4 class="rc-title">${city}</h4>
+        <div class="rc-sub">${country}</div>
+        <div class="rc-row">
+          <span class="emoji" aria-hidden="true">${icon}</span>
+          ${tempHtml}
+        </div>
+        <div>${metaHtml}</div>
+      </article>
+    `;
+  }).join('');
+}
+
+// click en tarjeta reciente -> buscar esa ciudad
+recentEl?.addEventListener('click', (e) => {
+  const card = e.target.closest('.recent-card');
+  if (!card) return;
+  input.value = card.dataset.city;
+  searchCity(input.value);
+});
+
 
 /* =========================================================
    INICIALIZACIÓN
    ========================================================= */
 updateUnitButtons();                    // refleja unidad guardada
 renderHistory();                        // pinta historial guardado (si hay)
+renderRecentFromHistory();
 setStatus('Escribí una ciudad y presioná Buscar.'); // mensaje inicial
