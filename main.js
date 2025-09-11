@@ -1,98 +1,217 @@
-/* =========================================================
-   ESTADO GLOBAL, FORMATTERS Y UTILIDADES
-   ========================================================= */
+// main.js — Frontend completo
 
-// Persistimos unidad seleccionada (°C por defecto)
+/* ============================
+   CONFIG + ESTADO
+============================ */
+const BACKEND_URL = "http://localhost:3000";
+
 const state = {
-  unit: localStorage.getItem('unit') || 'C', // 'C' o 'F'
+  unit: localStorage.getItem("unit") || "C", // 'C' | 'F'
 };
 
-// Formatters de números
-const nf1 = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 1 });
-const nf0 = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 });
+const GEO_PREF_KEY = "geo-consent"; // 'granted' | 'denied'
+let hasSearched = false; // se activa en cada búsqueda
+let lastResult = null; // { place, lat, lon }
 
-// Conversión de unidades
+// Formatters
+const nf1 = new Intl.NumberFormat("es-AR", { maximumFractionDigits: 1 });
+const nf0 = new Intl.NumberFormat("es-AR", { maximumFractionDigits: 0 });
+const nfPerc0 = new Intl.NumberFormat("es-AR", { maximumFractionDigits: 0 });
+const nf1raw = (n) => (Math.round(n * 10) / 10).toString();
+
 const toF = (c) => (c * 9) / 5 + 32;
 const kmhToMph = (k) => k * 0.621371;
 
-/** Formatea temperatura según unidad */
-function asTemp(n) {
-  return state.unit === 'C' ? `${nf1.format(n)}°C` : `${nf1.format(toF(n))}°F`;
-}
-/** Formatea viento según unidad */
-function asWind(kmh) {
-  return state.unit === 'C' ? `${nf0.format(kmh)} km/h` : `${nf0.format(kmhToMph(kmh))} mph`;
-}
+const asTemp = (n) =>
+  state.unit === "C" ? `${nf1.format(n)}°C` : `${nf1.format(toF(n))}°F`;
+const asWind = (kmh) =>
+  state.unit === "C"
+    ? `${nf0.format(kmh)} km/h`
+    : `${nf0.format(kmhToMph(kmh))} mph`;
 
-/** Debounce simple para inputs */
-function debounce(fn, delay = 400) {
-  let t;
-  return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), delay); };
-}
-
-/** Mapa simple de códigos WMO -> emojis (podés reemplazar por íconos SVG) */
+// Emoji simple por código WMO
 const WMO_ICON = (code) => {
-  if (code === 0) return '☀️';
-  if (code >= 1 && code <= 3) return '⛅';
-  if (code === 45 || code === 48) return '🌫️';
-  if (code >= 51 && code <= 57) return '🌦️';
-  if (code >= 61 && code <= 67) return '🌧️';
-  if (code >= 71 && code <= 77) return '🌨️';
-  if (code >= 80 && code <= 82) return '🌦️';
-  if (code === 85 || code === 86) return '❄️';
-  if (code === 95 || code === 96 || code === 99) return '⛈️';
-  return '🌤️';
+  if (code === 0) return "☀️";
+  if (code >= 1 && code <= 3) return "⛅";
+  if (code === 45 || code === 48) return "🌫️";
+  if (code >= 51 && code <= 57) return "🌦️";
+  if (code >= 61 && code <= 67) return "🌧️";
+  if (code >= 71 && code <= 77) return "🌨️";
+  if (code >= 80 && code <= 82) return "🌦️";
+  if (code === 85 || code === 86) return "❄️";
+  if (code === 95 || code === 96 || code === 99) return "⛈️";
+  return "🌤️";
 };
 
-// Cache de respuestas crudas (en °C y km/h, tal como devuelve Open-Meteo)
+// Cache en memoria (clave: ciudad o "lat,lon")
 const cache = new Map();
 
-/* =========================================================
+/* ============================
    SELECTORES DEL DOM
-   ========================================================= */
-const form = document.getElementById('search-form');
-const input = document.getElementById('city');
-const loader = document.getElementById('loader');
-const statusEl = document.getElementById('status');
-const currentEl = document.getElementById('current');
-const dailyEl = document.getElementById('daily');
+============================ */
+const form = document.getElementById("search-form");
+const input = document.getElementById("city");
+const loader = document.getElementById("loader");
+const statusEl = document.getElementById("status");
+const currentEl = document.getElementById("current");
+const dailyEl = document.getElementById("daily");
+const unitCBtn = document.getElementById("unit-c");
+const unitFBtn = document.getElementById("unit-f");
+const historyEl = document.getElementById("history");
+const recentEl = document.getElementById("recent");
+const favBtn = document.getElementById("btn-fav");
+const favsEl = document.getElementById("favs");
 
-// Botones de unidad
-const unitCBtn = document.getElementById('unit-c');
-const unitFBtn = document.getElementById('unit-f');
-
-// Historial
-const HISTORY_KEY = 'city-history';
-const historyEl = document.getElementById('history');
-
-/* =========================================================
-   FUNCIONES DE UI (estado de carga / mensajes / botones)
-   ========================================================= */
-function setLoading(isLoading) {
-  loader.hidden = !isLoading;
+/* ============================
+   UI HELPERS
+============================ */
+function setLoading(is) {
+  if (loader) loader.hidden = !is;
 }
-
-function setStatus(msg, type = 'info') {
-  statusEl.textContent = msg || '';
-  statusEl.className = 'status ' + (type === 'error' ? 'error' : 'info');
+function setStatus(msg, type = "info") {
+  if (!statusEl) return;
+  statusEl.textContent = msg || "";
+  statusEl.className = "status " + (type === "error" ? "error" : "info");
 }
-
 function updateUnitButtons() {
-  const isC = state.unit === 'C';
+  const isC = state.unit === "C";
   if (unitCBtn && unitFBtn) {
-    unitCBtn.setAttribute('aria-pressed', String(isC));
-    unitFBtn.setAttribute('aria-pressed', String(!isC));
+    unitCBtn.setAttribute("aria-pressed", String(isC));
+    unitFBtn.setAttribute("aria-pressed", String(!isC));
     unitCBtn.disabled = isC;
     unitFBtn.disabled = !isC;
   }
 }
+function debounce(fn, delay = 400) {
+  let t;
+  return (...args) => {
+    clearTimeout(t);
+    t = setTimeout(() => fn(...args), delay);
+  };
+}
 
-/* =========================================================
+/* ============================
+   FETCH JSON con timeout
+============================ */
+async function fetchJSON(url, { signal, timeoutMs = 12000 } = {}) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(new Error("timeout")), timeoutMs);
+
+  if (signal) {
+    if (signal.aborted) ctrl.abort();
+    else signal.addEventListener("abort", () => ctrl.abort(), { once: true });
+  }
+  try {
+    const res = await fetch(url, { signal: ctrl.signal });
+    clearTimeout(timer);
+    if (!res.ok) throw new Error(`Error ${res.status}: ${res.statusText}`);
+    return res.json();
+  } catch (e) {
+    clearTimeout(timer);
+    if (!navigator.onLine)
+      throw new Error("Estás sin conexión. Verificá tu internet.");
+    if (e.name === "AbortError" || e.message === "timeout") throw e;
+    throw new Error("No se pudo conectar con el servidor.");
+  }
+}
+async function postJSON(url, body, { signal, timeoutMs = 12000 } = {}) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(new Error("timeout")), timeoutMs);
+  if (signal) {
+    if (signal.aborted) ctrl.abort();
+    else signal.addEventListener("abort", () => ctrl.abort(), { once: true });
+  }
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+      signal: ctrl.signal,
+    });
+    clearTimeout(timer);
+    if (!res.ok) throw new Error(`Error ${res.status}: ${res.statusText}`);
+    return res.json();
+  } catch (e) {
+    clearTimeout(timer);
+    throw e;
+  }
+}
+
+function apiListFavorites(signal) {
+  return fetchJSON(`${BACKEND_URL}/favorites`, { signal });
+}
+
+function apiToggleFavorite({ city, lat, lon }, signal) {
+  return postJSON(
+    `${BACKEND_URL}/favorites/toggle`,
+    { city, lat, lon },
+    { signal }
+  );
+}
+
+/* ============================
+   BACKEND API (clima)
+============================ */
+function fetchWeatherByCityFromBackend(city, signal) {
+  const url = `${BACKEND_URL}/weather?city=${encodeURIComponent(city)}`;
+  return fetchJSON(url, { signal });
+}
+function fetchWeatherByCoordsFromBackend(lat, lon, signal) {
+  const url = `${BACKEND_URL}/weather/coords?lat=${lat}&lon=${lon}`;
+  return fetchJSON(url, { signal });
+}
+// ===== Favoritos API =====
+async function apiListFavorites(signal) {
+  return fetchJSON(`${BACKEND_URL}/favorites`, { signal });
+}
+
+async function apiToggleFavorite({ city, lat, lon }, signal) {
+  return fetchJSON(`${BACKEND_URL}/favorites/toggle`, {
+    signal,
+    // fetchJSON actual no acepta body; hacemos un pequeño helper inline:
+    // Para simplificar, agregamos una variante POST mínima:
+  }).catch(() => {}); // placeholder
+}
+
+/* ============================
+   REVERSE GEOCODING helper
+============================ */
+async function getPlaceFromCoords(lat, lon, signal) {
+  // 1) BigDataCloud
+  try {
+    const url = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=es`;
+    const data = await fetchJSON(url, { signal });
+    const city = data.city || data.locality || data.principalSubdivision || "";
+    const region = data.principalSubdivision || "";
+    const country = data.countryName || "";
+    const place = [city, region, country].filter(Boolean).join(", ");
+    if (place) return place;
+  } catch {}
+  // 2) Nominatim
+  try {
+    const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`;
+    const data = await fetchJSON(url, { signal });
+    const a = data.address || {};
+    const city = a.city || a.town || a.village || a.hamlet || "";
+    const region = a.state || a.region || "";
+    const country = a.country || "";
+    const place = [city, region, country].filter(Boolean).join(", ");
+    if (place) return place;
+  } catch {}
+  return `(${lat.toFixed(2)}, ${lon.toFixed(2)})`;
+}
+
+/* ============================
    HISTORIAL (localStorage)
-   ========================================================= */
+============================ */
+const HISTORY_KEY = "city-history";
+
 function getHistory() {
-  try { return JSON.parse(localStorage.getItem(HISTORY_KEY)) ?? []; }
-  catch { return []; }
+  try {
+    return JSON.parse(localStorage.getItem(HISTORY_KEY)) ?? [];
+  } catch {
+    return [];
+  }
 }
 function saveHistory(list) {
   localStorage.setItem(HISTORY_KEY, JSON.stringify(list));
@@ -100,78 +219,148 @@ function saveHistory(list) {
 function renderHistory() {
   if (!historyEl) return;
   const list = getHistory();
-  if (!list.length) { historyEl.innerHTML = ''; return; }
-  historyEl.innerHTML = list
-    .map(c => `<button type="button" data-city="${c}">${c}</button>`)
-    .join('');
+  historyEl.innerHTML = !list.length
+    ? ""
+    : list
+        .map((c) => `<button type="button" data-city="${c}">${c}</button>`)
+        .join("");
 }
-function addToHistory(city) {
-  const key = city.trim();
-  if (!key) return;
-  let list = getHistory().filter(c => c.toLowerCase() !== key.toLowerCase());
-  list.unshift(key);       // al principio
-  list = list.slice(0, 5); // límite 5
-  saveHistory(list);
-  renderHistory();
+async function refreshFavoritesUI() {
+  if (!favsEl) return;
+  try {
+    const list = await apiListFavorites();
+    if (!list.length) {
+      favsEl.innerHTML = "";
+      return;
+    }
+    favsEl.innerHTML = list
+      .map(
+        (f) => `
+      <button type="button" class="fav-chip" data-city="${f.city}">
+        ★ ${f.city}
+      </button>
+    `
+      )
+      .join("");
+  } catch (e) {
+    // ignoramos errores de red silenciosamente
+  }
 }
 
-// Click en botón del historial
-historyEl?.addEventListener('click', (e) => {
-  const btn = e.target.closest('button[data-city]');
+// click en un favorito = buscarlo
+favsEl?.addEventListener("click", (e) => {
+  const btn = e.target.closest(".fav-chip");
   if (!btn) return;
   input.value = btn.dataset.city;
   searchCity(input.value);
 });
 
-/* =========================================================
-   LLAMADAS A API (geocoding + forecast)
-   ========================================================= */
-async function geocodeCity(city, signal) {
-  const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=es&format=json`;
-  const res = await fetch(url, { signal });
-  if (!res.ok) throw new Error('No se pudo geocodificar la ciudad');
-  const data = await res.json();
-  if (!data.results || !data.results.length) throw new Error('Ciudad no encontrada');
-  const { latitude, longitude, name, country, admin1 } = data.results[0];
-  return { latitude, longitude, place: [name, admin1, country].filter(Boolean).join(', ') };
+function addToHistory(city) {
+  const key = city.trim();
+  if (!key) return;
+  let list = getHistory().filter((c) => c.toLowerCase() !== key.toLowerCase());
+  list.unshift(key);
+  list = list.slice(0, 5);
+  saveHistory(list);
+  renderHistory();
+}
+historyEl?.addEventListener("click", (e) => {
+  const btn = e.target.closest("button[data-city]");
+  if (!btn) return;
+  input.value = btn.dataset.city;
+  searchCity(input.value);
+});
+async function setFavButtonFor(place) {
+  if (!favBtn) {
+    return;
+  }
+  if (!place) {
+    favBtn.hidden = true;
+    return;
+  }
+  favBtn.hidden = false;
+
+  // ¿Está en favoritos?
+  try {
+    const list = await apiListFavorites();
+    const isFav = list.some(
+      (f) => (f.city || "").toLowerCase() === place.toLowerCase()
+    );
+    favBtn.textContent = isFav ? "★ Favorito" : "☆ Favorito";
+    favBtn.classList.toggle("active", isFav);
+  } catch {
+    // si falla la red, mostramos el botón igual “apagado”
+    favBtn.textContent = "☆ Favorito";
+    favBtn.classList.remove("active");
+  }
+}
+favBtn?.addEventListener("click", (e) => {
+  e.preventDefault();
+  toggleCurrentFavorite();
+});
+
+async function toggleCurrentFavorite() {
+  if (!lastResult || !lastResult.place) return;
+  try {
+    await apiToggleFavorite({
+      city: lastResult.place,
+      lat: lastResult.lat ?? null,
+      lon: lastResult.lon ?? null,
+    });
+    await setFavButtonFor(lastResult.place);
+    await refreshFavoritesUI();
+  } catch (e) {
+    setStatus("No se pudo actualizar favoritos", "error");
+  }
 }
 
-async function fetchForecast({ latitude, longitude }, signal) {
-  const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,apparent_temperature,wind_speed_10m,weather_code&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=America%2FArgentina%2FBuenos_Aires`;
-  const res = await fetch(url, { signal });
-  if (!res.ok) throw new Error('No se pudo cargar el pronóstico');
-  return res.json();
-}
-
-/* =========================================================
-   RENDERIZADO DE UI (clima actual + pronóstico diario)
-   ========================================================= */
+/* ============================
+   RENDER
+============================ */
 function renderCurrent(el, place, current) {
+  const items = [
+    { label: "Temperatura", val: asTemp(current.temperature_2m) },
+    { label: "Sensación", val: asTemp(current.apparent_temperature) },
+    { label: "Viento", val: asWind(current.wind_speed_10m) },
+  ];
+  if (typeof current.relative_humidity_2m === "number")
+    items.push({
+      label: "Humedad",
+      val: `${nfPerc0.format(current.relative_humidity_2m)}%`,
+    });
+  if (typeof current.precipitation === "number")
+    items.push({
+      label: "Precipitación",
+      val: `${nf1raw(current.precipitation)} mm`,
+    });
+  if (typeof current.pressure_msl === "number")
+    items.push({
+      label: "Presión",
+      val: `${nf0.format(current.pressure_msl)} hPa`,
+    });
+
   el.innerHTML = `
     <div class="row" style="justify-content: space-between;">
       <div>
         <h2 class="place">${place}</h2>
-        <div class="muted">${new Date().toLocaleString('es-AR')}</div>
+        <div class="muted">${new Date().toLocaleString("es-AR")}</div>
       </div>
-      <div class="emoji" aria-hidden="true">${WMO_ICON(current.weather_code)}</div>
+      <div class="emoji" aria-hidden="true">${WMO_ICON(
+        current.weather_code
+      )}</div>
     </div>
     <div class="kv">
-      <div>
-        <div class="label">Temperatura</div>
-        <div class="big">${asTemp(current.temperature_2m)}</div>
-      </div>
-      <div>
-        <div class="label">Sensación</div>
-        <div class="big">${asTemp(current.apparent_temperature)}</div>
-      </div>
-      <div>
-        <div class="label">Viento</div>
-        <div>${asWind(current.wind_speed_10m)}</div>
-      </div>
-      <div>
-        <div class="label">Código</div>
-        <div>${current.weather_code}</div>
-      </div>
+      ${items
+        .map(
+          ({ label, val }) => `
+          <div>
+            <div class="label">${label}</div>
+            <div class="${
+              label === "Temperatura" || label === "Sensación" ? "big" : ""
+            }">${val}</div>
+          </div>`
+        )
+        .join("")}
     </div>
   `;
 }
@@ -182,22 +371,49 @@ function renderDaily(el, daily) {
     tmax: daily.temperature_2m_max[i],
     tmin: daily.temperature_2m_min[i],
     code: daily.weather_code[i],
+    pprob: daily.precipitation_probability_max?.[i],
+    psum: daily.precipitation_sum?.[i],
   }));
 
-  el.innerHTML = days.map(d => `
-    <article class="day">
-      <div class="row" style="justify-content: space-between;">
-        <strong>${new Date(d.date).toLocaleDateString('es-AR', { weekday: 'short', day: '2-digit', month: '2-digit' })}</strong>
-        <span class="emoji" aria-hidden="true">${WMO_ICON(d.code)}</span>
-      </div>
-      <div class="row" style="justify-content: space-between; margin-top:8px;">
-        <span class="muted">Mín</span><span>${asTemp(d.tmin)}</span>
-      </div>
-      <div class="row" style="justify-content: space-between;">
-        <span class="muted">Máx</span><span>${asTemp(d.tmax)}</span>
-      </div>
-    </article>
-  `).join('');
+  el.innerHTML = days
+    .map(
+      (d) => `
+      <article class="day">
+        <div class="row" style="justify-content: space-between;">
+          <strong>${new Date(d.date).toLocaleDateString("es-AR", {
+            weekday: "short",
+            day: "2-digit",
+            month: "2-digit",
+          })}</strong>
+          <span class="emoji" aria-hidden="true">${WMO_ICON(d.code)}</span>
+        </div>
+        <div class="row" style="justify-content: space-between; margin-top:8px;">
+          <span class="muted">Mín</span><span>${asTemp(d.tmin)}</span>
+        </div>
+        <div class="row" style="justify-content: space-between;">
+          <span class="muted">Máx</span><span>${asTemp(d.tmax)}</span>
+        </div>
+        ${
+          typeof d.pprob === "number"
+            ? `<div class="row" style="justify-content: space-between;">
+                 <span class="muted">Lluvia (prob.)</span><span>${nfPerc0.format(
+                   d.pprob
+                 )}%</span>
+               </div>`
+            : ""
+        }
+        ${
+          typeof d.psum === "number"
+            ? `<div class="row" style="justify-content: space-between;">
+                 <span class="muted">Lluvia (acum.)</span><span>${nf1raw(
+                   d.psum
+                 )} mm</span>
+               </div>`
+            : ""
+        }
+      </article>`
+    )
+    .join("");
 }
 
 function render(place, data) {
@@ -207,51 +423,53 @@ function render(place, data) {
   renderDaily(dailyEl, data.daily);
 }
 
-/* =========================================================
-   LÓGICA DE BÚSQUEDA / EVENT LOOP
-   ========================================================= */
-let controller; // AbortController para cancelar requests en curso
+/* ============================
+   BÚSQUEDA
+============================ */
+let controller; // AbortController para cancelar en curso
 
 async function searchCity(city) {
-  const key = city.trim().toLowerCase();
+  const key = (city || "").trim().toLowerCase();
   if (!key) return;
+  hasSearched = true;
 
-
-  // Si ya existe en cache, evitamos pedir de nuevo
+  // Cache
   if (cache.has(key)) {
     const { place, data } = cache.get(key);
-
-    // 👇 Alias extra: guardamos también por el "place" bonito (Buenos Aires, ...)
     cache.set(place.toLowerCase(), { place, data });
-
     render(place, data);
     addToHistory(place);
-    renderRecentFromHistory(); // 👈 refrescamos tarjetas recientes
-    setStatus('');
+    renderRecentFromHistory();
+    setStatus("");
     return;
   }
 
-
-  // Cancelamos cualquier request anterior en curso
   controller?.abort();
   controller = new AbortController();
-
   try {
-    const geo = await geocodeCity(key, controller.signal);
-    const data = await fetchForecast(geo, controller.signal);
+    setLoading(true);
+    setStatus("Buscando…");
+    const resp = await fetchWeatherByCityFromBackend(key, controller.signal);
 
-    // 👇 Guardar con dos claves: lo tipeado y el "place" completo
-    cache.set(key, { place: geo.place, data });
-    cache.set(geo.place.toLowerCase(), { place: geo.place, data }); // 👈 alias
+    const place = resp.place;
+    const data = { current: resp.current, daily: resp.daily };
 
-    render(geo.place, data);
-    addToHistory(geo.place);
-    renderRecentFromHistory(); // 👈 ACTUALIZAR tarjetas
-    setStatus('');
+    cache.set(key, { place, data });
+    cache.set(place.toLowerCase(), { place, data });
 
+    // Guardamos el último resultado (para el botón de favoritos)
+    lastResult = { place, lat: resp.lat ?? null, lon: resp.lon ?? null };
+
+    render(place, data);
+    addToHistory(place);
+    renderRecentFromHistory();
+    setStatus("");
+
+    // Actualizamos el botón de favorito según si ya está en DB
+    setFavButtonFor(place);
   } catch (err) {
-    if (err.name === 'AbortError') return; // se canceló por una nueva búsqueda
-    setStatus(err.message || 'Ocurrió un error', 'error');
+    if (err.name === "AbortError") return;
+    setStatus(err.message || "Ocurrió un error", "error");
     currentEl.hidden = true;
     dailyEl.hidden = true;
   } finally {
@@ -259,108 +477,258 @@ async function searchCity(city) {
   }
 }
 
-/* =========================================================
-   EVENTOS DEL FORM / INPUT / TOGGLE UNIDADES
-   ========================================================= */
+async function searchByCoords(lat, lon) {
+  hasSearched = true;
+  controller?.abort();
+  controller = new AbortController();
+  try {
+    setLoading(true);
+    setStatus("Buscando por ubicación…");
 
-// Enviar form = buscar
-form.addEventListener('submit', (e) => {
-  e.preventDefault();
-  searchCity(input.value);
-});
+    const resp = await fetchWeatherByCoordsFromBackend(
+      lat,
+      lon,
+      controller.signal
+    );
+    const place =
+      resp.place || (await getPlaceFromCoords(lat, lon, controller.signal));
+    const data = { current: resp.current, daily: resp.daily };
 
-// Búsqueda reactiva con debounce (no dispara si el input está en foco escribiendo)
-const debounced = debounce(() => {
-  if (document.activeElement === input) return;
-  searchCity(input.value);
-}, 600);
+    const key = `${lat.toFixed(3)},${lon.toFixed(3)}`.toLowerCase();
+    cache.set(key, { place, data });
+    cache.set(place.toLowerCase(), { place, data });
 
-input.addEventListener('change', () => searchCity(input.value));
-input.addEventListener('keyup', debounced);
-
-// Toggle de unidades (°C / °F) con persistencia y re-render
-if (unitCBtn && unitFBtn) {
-  unitCBtn.addEventListener('click', () => {
-    state.unit = 'C';
-    localStorage.setItem('unit', 'C');
-    updateUnitButtons();
-    const cached = cache.get(input.value.trim().toLowerCase());
-    if (cached) render(cached.place, cached.data);
-  });
-
-  unitFBtn.addEventListener('click', () => {
-    state.unit = 'F';
-    localStorage.setItem('unit', 'F');
-    updateUnitButtons();
-    const cached = cache.get(input.value.trim().toLowerCase());
-    if (cached) render(cached.place, cached.data);
-  });
+    lastResult = { place, lat, lon };
+    render(place, data);
+    addToHistory(place);
+    renderRecentFromHistory();
+    setStatus("");
+    setFavButtonFor(place); // 👈 nuevo
+  } catch (err) {
+    if (err.name === "AbortError") return;
+    setStatus(err.message || "No se pudo obtener tu ubicación", "error");
+    if (!hasSearched) {
+      currentEl.hidden = true;
+      dailyEl.hidden = true;
+    }
+  } finally {
+    setLoading(false);
+  }
 }
-// ========== RECENTES (tarjetas tipo AccuWeather) ==========
-const recentEl = document.getElementById('recent');
 
+/* ============================
+   RECIENTES (cards)
+============================ */
 function splitPlace(place) {
-  // "Buenos Aires, Buenos Aires, Argentina" -> {city, region, country}
-  const parts = place.split(',').map(s => s.trim());
+  const parts = place.split(",").map((s) => s.trim());
   return {
     city: parts[0] || place,
     region: parts[1] || "",
-    country: parts[2] || parts[1] || ""
+    country: parts[2] || parts[1] || "",
   };
 }
-
 function renderRecentFromHistory() {
   if (!recentEl) return;
-  const list = getHistory(); // ya la tenés por el historial
+  const list = getHistory();
   if (!list.length) {
     recentEl.innerHTML = "";
     return;
   }
-  // hasta 4 tarjetas
   const top = list.slice(0, 4);
-  recentEl.innerHTML = top.map((place) => {
-    // Si hay datos cacheados, mostramos temp/icono
-    const key = place.toLowerCase();
-    const cached = cache.get(key);
-    const { city, country } = splitPlace(place);
-    let tempHtml = `<span class="rc-temp">—</span>`;
-    let metaHtml = `<span class="rc-meta">RealFeel —</span>`;
-    let icon = "⛅";
-
-    if (cached?.data?.current) {
-      const cur = cached.data.current;
-      tempHtml = `<span class="rc-temp">${asTemp(cur.temperature_2m)}</span>`;
-      metaHtml = `<span class="rc-meta">RealFeel ${asTemp(cur.apparent_temperature)}</span>`;
-      icon = WMO_ICON(cur.weather_code);
-    }
-
-    return `
-      <article class="recent-card" data-city="${place}">
-        <h4 class="rc-title">${city}</h4>
-        <div class="rc-sub">${country}</div>
-        <div class="rc-row">
-          <span class="emoji" aria-hidden="true">${icon}</span>
-          ${tempHtml}
-        </div>
-        <div>${metaHtml}</div>
-      </article>
-    `;
-  }).join('');
+  recentEl.innerHTML = top
+    .map((place) => {
+      const key = place.toLowerCase();
+      const cached = cache.get(key);
+      const { city, country } = splitPlace(place);
+      let tempHtml = `<span class="rc-temp">—</span>`;
+      let metaHtml = `<span class="rc-meta">RealFeel —</span>`;
+      let icon = "⛅";
+      if (cached?.data?.current) {
+        const cur = cached.data.current;
+        tempHtml = `<span class="rc-temp">${asTemp(cur.temperature_2m)}</span>`;
+        metaHtml = `<span class="rc-meta">RealFeel ${asTemp(
+          cur.apparent_temperature
+        )}</span>`;
+        icon = WMO_ICON(cur.weather_code);
+      }
+      return `
+        <article class="recent-card" data-city="${place}">
+          <h4 class="rc-title">${city}</h4>
+          <div class="rc-sub">${country}</div>
+          <div class="rc-row">
+            <span class="emoji" aria-hidden="true">${icon}</span>
+            ${tempHtml}
+          </div>
+          <div>${metaHtml}</div>
+        </article>`;
+    })
+    .join("");
 }
-
-// click en tarjeta reciente -> buscar esa ciudad
-recentEl?.addEventListener('click', (e) => {
-  const card = e.target.closest('.recent-card');
+recentEl?.addEventListener("click", (e) => {
+  const card = e.target.closest(".recent-card");
   if (!card) return;
   input.value = card.dataset.city;
   searchCity(input.value);
 });
 
+/* ============================
+   GEO (permiso + intento único)
+============================ */
+function getGeoPref() {
+  return localStorage.getItem(GEO_PREF_KEY) || "";
+}
+function setGeoPref(v) {
+  localStorage.setItem(GEO_PREF_KEY, v);
+}
 
+async function tryGeolocateOnce() {
+  if (!("geolocation" in navigator)) return false;
+
+  const pref = getGeoPref();
+  if (pref === "denied") return false;
+
+  setStatus("Obteniendo tu ubicación…");
+
+  try {
+    const pos = await new Promise((resolve, reject) => {
+      const to = setTimeout(() => reject(new Error("timeout")), 10000);
+      navigator.geolocation.getCurrentPosition(
+        (p) => {
+          clearTimeout(to);
+          resolve(p);
+        },
+        (e) => {
+          clearTimeout(to);
+          reject(e);
+        },
+        { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 }
+      );
+    });
+
+    setGeoPref("granted");
+    await searchByCoords(pos.coords.latitude, pos.coords.longitude);
+    return true;
+  } catch (e) {
+    setGeoPref("denied");
+    setStatus(
+      "No se pudo usar tu ubicación (permiso denegado o tiempo agotado).",
+      "error"
+    );
+    if (!hasSearched) {
+      currentEl.hidden = true;
+      dailyEl.hidden = true;
+    }
+    return false;
+  }
+}
+
+function loadLastHistoryFallback() {
+  const list = getHistory();
+  const last =
+    Array.isArray(list) && list[0]
+      ? typeof list[0] === "string"
+        ? list[0]
+        : list[0].place
+      : "";
+  if (last) {
+    input.value = last;
+    searchCity(last);
+    return true;
+  }
+  return false;
+}
+
+/* ============================
+   EVENTOS + INIT
+============================ */
+form?.addEventListener("submit", (e) => {
+  e.preventDefault();
+  if (input.value.trim()) searchCity(input.value);
+});
+const debounced = debounce(() => {
+  if (document.activeElement === input) return;
+  if (input.value.trim()) searchCity(input.value);
+}, 600);
+input?.addEventListener("change", () => {
+  if (input.value.trim()) searchCity(input.value);
+});
+input?.addEventListener("keyup", debounced);
+
+if (unitCBtn && unitFBtn) {
+  const reRenderFromInput = () => {
+    const k = input.value.trim().toLowerCase();
+    const cached =
+      cache.get(k) || cache.get((cache.get(k)?.place || "").toLowerCase());
+    if (cached) render(cached.place, cached.data);
+    renderRecentFromHistory();
+  };
+  unitCBtn.addEventListener("click", () => {
+    state.unit = "C";
+    localStorage.setItem("unit", "C");
+    updateUnitButtons();
+    reRenderFromInput();
+  });
+  unitFBtn.addEventListener("click", () => {
+    state.unit = "F";
+    localStorage.setItem("unit", "F");
+    updateUnitButtons();
+    reRenderFromInput();
+  });
+}
 /* =========================================================
-   INICIALIZACIÓN
+   FAVORITOS (DB vía backend)
    ========================================================= */
-updateUnitButtons();                    // refleja unidad guardada
-renderHistory();                        // pinta historial guardado (si hay)
+
+async function renderFavorites() {
+  if (!favsEl) return;
+  try {
+    const res = await fetchJSON(`${BACKEND_URL}/favorites`);
+    if (!Array.isArray(res) || !res.length) {
+      favsEl.innerHTML = "<p class='muted'>No tenés favoritos guardados.</p>";
+      return;
+    }
+
+    favsEl.innerHTML = res
+      .map(
+        (f) => `
+        <article class="recent-card" data-city="${f.city}" data-lat="${
+          f.lat
+        }" data-lon="${f.lon}">
+          <h4 class="rc-title">${f.city}</h4>
+          <div class="rc-sub">${f.country || ""}</div>
+          <div class="rc-row">
+            <span class="emoji">⭐</span>
+            <span class="rc-temp">${f.lat.toFixed(2)}, ${f.lon.toFixed(
+          2
+        )}</span>
+          </div>
+          <div class="rc-meta">Agregado: ${new Date(
+            f.created_at
+          ).toLocaleDateString("es-AR")}</div>
+        </article>
+      `
+      )
+      .join("");
+  } catch (e) {
+    favsEl.innerHTML = `<p class="status error">${e.message}</p>`;
+  }
+}
+
+// Click en tarjeta de favoritos → buscar esa ciudad
+favsEl?.addEventListener("click", (e) => {
+  const card = e.target.closest(".recent-card");
+  if (!card) return;
+  input.value = card.dataset.city;
+  searchCity(input.value);
+});
+
+// Inicio
+updateUnitButtons();
+renderHistory();
 renderRecentFromHistory();
-setStatus('Escribí una ciudad y presioná Buscar.'); // mensaje inicial
+setStatus("Escribí una ciudad y presioná Buscar.");
+
+(async () => {
+  const usedGeo = await tryGeolocateOnce();
+  if (!usedGeo) loadLastHistoryFallback();
+})();

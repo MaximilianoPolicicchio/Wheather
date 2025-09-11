@@ -1,70 +1,82 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Pronóstico del clima — Starter</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <!-- HERO con imagen de fondo -->
+    <section class="hero">
+      <div class="container">
+        <header class="header">
+          <h1>Pronóstico del clima</h1>
+          <p class="muted">
+            Buscá una ciudad y mirá el clima actual y los próximos días.
+          </p>
+        </header>
 
-<head>
-  <!-- ================== HEAD / METADATOS ================== -->
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Pronóstico del clima — Starter</title>
+        <!-- Buscador dentro del hero -->
+        <form id="search-form" class="search" autocomplete="off">
+  <label for="city" class="sr-only">Ciudad</label>
+  <input id="city" name="city" placeholder="Buscar" autocomplete="off" />
+  <button type="submit" id="btn-search">Buscar</button>
+  <div id="loader" hidden>Cargando…</div>
+</form>
 
-  <!-- ============== ESTILOS GLOBALES DEL PROYECTO ============== -->
-  <link rel="stylesheet" href="./styles.css" />
-</head>
+<!-- el script al FINAL del body o con defer -->
+<script src="./main.js" defer></script>
 
+          <!-- Botones de unidad -->
+          <div class="unit">
+            <button type="button" id="unit-c" aria-pressed="true">°C</button>
+            <button type="button" id="unit-f" aria-pressed="false">°F</button>
+            <button id="btn-fav" type="button" class="fav-btn" hidden>☆ Favorito</button>
 
+          </div>
 
-<!-- HERO con fondo -->
-<section class="hero">
-  <div class="container">
-    <header class="header">
-      <h1>Pronóstico del clima</h1>
-      <p class="muted">Buscá una ciudad y mirá el clima actual y los próximos días.</p>
-    </header>
+          <div id="loader" aria-live="polite" class="loader" hidden>
+            Cargando…
+          </div>
+        </form>
+<section class="container">
+  <h3 class="section-title">FAVORITOS</h3>
+  <div id="favs" class="history"></div>
+</section>
 
-    <!-- Buscador dentro del hero -->
-    <form id="search-form" class="search search--hero" autocomplete="off">
-      <label for="city" class="sr-only">Ciudad</label>
-      <input id="city" name="city" placeholder="Buscar" autocomplete="off" />
-      <button type="submit" id="btn-search">Buscar</button>
-      <div class="unit">
-        <button type="button" id="unit-c" aria-pressed="true">°C</button>
-        <button type="button" id="unit-f" aria-pressed="false">°F</button>
+        <!-- Ubicaciones recientes flotando sobre la imagen -->
+        <div class="recent-wrap">
+          <h3 class="section-title section-title--overlay">
+            UBICACIONES RECIENTES
+          </h3>
+          <section id="recent" class="recent recent--overlay"></section>
+        </div>
       </div>
-      <div id="loader" aria-live="polite" class="loader" hidden>Cargando…</div>
-    </form>
-  </div>
-</section>
+    </section>
 
-<!-- ✅ Ubicaciones recientes AFUERA del hero -->
-<section class="container">
-  <h3 class="section-title">UBICACIONES RECIENTES</h3>
-  <section id="recent" class="recent"></section>
-</section>
+    <section class="container">
+      <h3 class="section-title">FAVORITOS</h3>
+      <section id="favorites" class="grid"></section>
+    </section>
 
+    <!-- Estado + resultados -->
+    <main class="container">
+      <section id="status" class="status" aria-live="polite"></section>
+      <section id="current" class="card" hidden></section>
+      <section id="daily" class="grid" hidden></section>
+    </main>
 
-<!-- Ubicaciones recientes (se llena con el historial) -->
-<section class="container">
-  <h3 class="section-title">UBICACION BUSCADA:</h3>
-  <section id="recent" class="recent"></section>
-</section>
+    <footer class="container footer">
+      <small class="muted">
+        Datos por
+        <a href="https://open-meteo.com/" target="_blank" rel="noreferrer"
+          >Open-Meteo</a
+        >
+        • Zona horaria: America/Argentina/Buenos_Aires
+      </small>
+    </footer>
 
-<!-- Estado + resultados -->
-<main class="container">
-  <section id="status" class="status" aria-live="polite"></section>
-  <section id="current" class="card" hidden></section>
-  <section id="daily" class="grid" hidden></section>
-</main>
-
-<footer class="container footer">
-  <small class="muted">Datos por <a href="https://open-meteo.com/" target="_blank" rel="noreferrer">Open-Meteo</a> •
-    Zona horaria: America/Argentina/Buenos_Aires</small>
-</footer>
-
-<script type="module" src="./main.js"></script>
-<h3 class="section-title">WHEATHER</h3>
-<section id="recent" class="recent"></section>
-
-</body>
-
-
+    <script type="module" src="./main.js"></script>
+  </body>
 </html>
