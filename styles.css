@@ -637,3 +637,66 @@ main.container {
   border-color: var(--accent);
   background: rgba(77, 163, 255, 0.15);
 }
+/* ===== Toggle unidades + Favorito ===== */
+.unit-toggle{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  margin:10px 0 22px;
+}
+
+.unit-toggle button{
+  background:var(--surface);
+  color:var(--fg);
+  border:1px solid var(--surface-border);
+  border-radius:10px;
+  padding:10px 12px;
+  cursor:pointer;
+  transition:background .15s ease, border-color .15s ease, transform .05s ease;
+}
+
+.unit-toggle button[aria-pressed="true"]{
+  background:var(--accent);
+  color:var(--accent-contrast);
+  font-weight:800;
+}
+
+#btn-fav{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  border-radius:999px;
+  padding:10px 14px;
+}
+#btn-fav.active{
+  background:#ffd54f;
+  color:#1a1a1a;
+  border-color:#ffd54f;
+}
+
+/* ===== Lista de favoritos ===== */
+.favorites{
+  display:flex;
+  gap:12px;
+  flex-wrap:wrap;
+  margin-bottom:8px;
+}
+
+.fav-card{
+  min-width:220px;
+  background:var(--card);
+  border:1px solid var(--card-border);
+  color:inherit;
+  border-radius:12px;
+  padding:12px 14px;
+  box-shadow:var(--card-shadow);
+  cursor:pointer;
+  transition:transform .08s ease, border-color .15s ease;
+}
+.fav-card:hover{
+  transform:translateY(-1px);
+  border-color:var(--accent);
+}
+
+.fav-title{ font-weight:800; margin:0 0 4px; }
+.fav-meta{ font-size:.9rem; opacity:.9; }
