@@ -75,8 +75,11 @@ if (favBtn && !favBtn.querySelector(".star")) {
    UI HELPERS
    ========================================================= */
 function setLoading(is) {
-  if (loader) loader.hidden = !is;
+  if (!loader) return;
+  loader.setAttribute("aria-hidden", String(!is));
+  form?.classList.toggle("is-loading", is); // activa/desactiva el spinner sin mover layout
 }
+
 function setStatus(msg, type = "info") {
   if (!statusEl) return;
   statusEl.textContent = msg || "";
@@ -135,15 +138,18 @@ const apiToggleFavorite = (city, lat, lon) =>
 /* =========================================================
    FAVORITO: UI y sincronización
    ========================================================= */
+// setup inicial (por si el HTML no lo tenía así)
+if (favBtn && !favBtn.querySelector(".star")) {
+  favBtn.innerHTML = `<span class="glyph">☆</span> <span class="star">Favorito</span>`;
+  favBtn.setAttribute("aria-pressed", "false");
+}
+
 function applyFavVisual(isOn) {
   if (!favBtn) return;
   favBtn.classList.toggle("is-on", isOn);
   favBtn.setAttribute("aria-pressed", String(isOn));
-  if (isOn) {
-    favBtn.innerHTML = `★ <span class="star">Favorito</span>`;
-  } else {
-    favBtn.innerHTML = `☆ <span class="star">Favorito</span>`;
-  }
+  const glyph = isOn ? "★" : "☆";
+  favBtn.innerHTML = `<span class="glyph">${glyph}</span> <span class="star">Favorito</span>`;
 }
 
 async function syncFavButton(place) {
@@ -313,7 +319,7 @@ function saveHistory(list) {
 }
 function renderHistory() {
   if (!historyEl) return;
-  const list = getHistory();
+  const list = getHistory().slice(0, 4); // ← renderiza sólo 4
   if (!list.length) {
     historyEl.innerHTML = "";
     historyEl.classList.remove("floating-grid", "history");
@@ -325,21 +331,23 @@ function renderHistory() {
       (c) => `
     <article class="floating-card" data-city="${c}">
       <h4 class="title">${c}</h4>
-      <p class="sub">Búsqueda reciente</p>
+      <!-- sin subtítulo -->
     </article>
   `
     )
     .join("");
 }
+
 function addToHistory(city) {
   let list = getHistory().filter(
     (c) => c.toLowerCase() !== String(city).toLowerCase()
   );
   list.unshift(city);
-  list = list.slice(0, 5);
+  list = list.slice(0, 4); // ← antes era 5; ahora 4
   saveHistory(list);
   renderHistory();
 }
+
 // Delegación: click en cualquier tarjeta del historial
 historyEl?.addEventListener("click", (e) => {
   const card = e.target.closest(".floating-card[data-city]");
@@ -363,11 +371,8 @@ async function renderFavorites() {
     favoritesEl.innerHTML = list
       .map(
         (f) => `
-      <article class="floating-card" data-city="${f.city}" data-lat="${
-          f.lat
-        }" data-lon="${f.lon}">
+      <article class="floating-card" data-city="${f.city}">
         <h4 class="title">${f.city}</h4>
-        <p class="sub">${fmt2(f.lat)}, ${fmt2(f.lon)}</p>
       </article>
     `
       )
@@ -376,6 +381,7 @@ async function renderFavorites() {
     console.error("Error cargando favoritos", e);
   }
 }
+
 // Delegación: click en cualquier tarjeta de favoritos
 favoritesEl?.addEventListener("click", (e) => {
   const card = e.target.closest(".floating-card[data-city]");
@@ -528,4 +534,71 @@ setStatus("Escribí una ciudad y presioná Buscar.");
       setStatus("");
     }
   } catch {}
+})();
+
+// Título: caída desde arriba al cargar
+(() => {
+  const h1 =
+    document.querySelector(".hero--in-box h1") ||
+    document.querySelector(".hero h1");
+  if (!h1 || !window.gsap) return;
+
+  // estado inicial (evita parpadeo antes de animar)
+  gsap.set(h1, { y: -80, opacity: 0 });
+
+  // animación de entrada
+  gsap.to(h1, {
+    y: 0,
+    opacity: 1,
+    duration: 0.9,
+    ease: "bounce.out", // probá "back.out(1.6)" si lo querés menos elástico
+  });
+})();
+
+// === Fondo de video: velocidad lenta + evitar "saltos"/pausas ===
+(() => {
+  const vid = document.querySelector(".bg > video");
+  if (!vid) return;
+
+  const SPEED = 0.5; // 0.5–0.8 (más chico = más lento)
+  const apply = () => {
+    try {
+      vid.defaultPlaybackRate = SPEED; // futuras reproducciones
+      vid.playbackRate = SPEED; // velocidad actual
+    } catch {}
+  };
+  const ensurePlaying = () => {
+    if (vid.paused) vid.play().catch(() => {});
+  };
+
+  vid.addEventListener(
+    "loadedmetadata",
+    () => {
+      apply();
+      ensurePlaying();
+    },
+    { once: true }
+  );
+  vid.addEventListener("canplay", apply);
+  vid.addEventListener("playing", apply);
+
+  // Si algo cambia la velocidad, volvemos a la nuestra
+  vid.addEventListener("ratechange", () => {
+    if (Math.abs(vid.playbackRate - SPEED) > 0.01) apply();
+  });
+
+  // Al volver a la pestaña/ventana, que no quede pausado
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) {
+      apply();
+      ensurePlaying();
+    }
+  });
+  window.addEventListener("focus", () => {
+    apply();
+    ensurePlaying();
+  });
+
+  // Intento inmediato por si ya está listo
+  apply();
 })();
