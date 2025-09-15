@@ -47,7 +47,6 @@ a {
   color: var(--accent);
   text-decoration: none;
 }
-
 a:hover {
   text-decoration: underline;
 }
@@ -75,13 +74,11 @@ a:hover {
   padding-top: 12px;
 }
 
-/* antes era 24px (var(--s-5)) */
 h1 {
   margin: 0 0 var(--s-2);
   font-size: 2.2rem;
   letter-spacing: 0.2px;
 }
-
 .muted {
   color: var(--muted);
 }
@@ -113,11 +110,9 @@ h1 {
   transition: border-color 0.15s ease, box-shadow 0.15s ease,
     transform 0.05s ease;
 }
-
 .search input::placeholder {
   color: #737a86;
 }
-
 .search input:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 4px rgba(77, 163, 255, 0.15);
@@ -134,11 +129,9 @@ h1 {
   cursor: pointer;
   transition: filter 0.15s ease, transform 0.05s ease;
 }
-
 .search button[type="submit"]:hover {
   filter: brightness(1.05);
 }
-
 .search button[type="submit"]:active {
   transform: translateY(1px);
 }
@@ -153,7 +146,6 @@ h1 {
   border-radius: 12px;
   padding: 4px;
 }
-
 .unit button {
   background: transparent;
   color: var(--fg);
@@ -163,7 +155,6 @@ h1 {
   cursor: pointer;
   transition: background 0.15s ease, color 0.15s ease;
 }
-
 .unit button[aria-pressed="true"] {
   background: var(--accent);
   color: var(--accent-contrast);
@@ -179,11 +170,9 @@ h1 {
   min-height: 24px;
   margin: var(--s-2) 0 var(--s-4);
 }
-
 .status.info {
   color: var(--muted);
 }
-
 .status.error {
   background: linear-gradient(
     180deg,
@@ -204,14 +193,12 @@ h1 {
   padding: var(--s-4);
   box-shadow: var(--card-shadow);
 }
-
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: var(--s-3);
   margin-top: var(--s-3);
 }
-
 .day {
   background: var(--card);
   border: 1px solid var(--card-border);
@@ -219,7 +206,6 @@ h1 {
   padding: var(--s-3);
   transition: transform 0.08s ease, border-color 0.15s ease;
 }
-
 .day:hover {
   transform: translateY(-1px);
   border-color: var(--accent);
@@ -230,7 +216,6 @@ h1 {
   gap: var(--s-2);
   align-items: center;
 }
-
 .place {
   font-size: 1.2rem;
   font-weight: 800;
@@ -243,59 +228,35 @@ h1 {
   gap: var(--s-2);
   margin-top: var(--s-3);
 }
-
 .kv div {
   background: var(--surface);
   border: 1px solid var(--surface-border);
   border-radius: var(--r-sm);
   padding: 8px 10px;
 }
-
 .kv .label {
   color: var(--muted);
   font-size: 0.86rem;
 }
-
 .big {
   font-size: 2.2rem;
   font-weight: 900;
   line-height: 1.1;
 }
-
 .emoji {
   font-size: 2rem;
 }
 
-/* ======================= HERO + BUSCADOR ======================= */
+/* ======================= HERO (sin imagen de fondo) ======================= */
 .hero {
   position: relative;
-  /* necesario para que el absolute funcione dentro */
-  background-image: url("./hero.jpg");
-  background-size: cover;
-  background-position: center 30%;
-  padding: 64px 0 160px;
+  padding: 80px 0 120px; /* espacio alto para el buscador */
 }
-
-.hero::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    180deg,
-    rgba(0, 0, 0, 0.55) 0%,
-    rgba(0, 0, 0, 0.25) 45%,
-    rgba(0, 0, 0, 0) 100%
-  );
-}
-
 .hero .container {
   position: relative;
   z-index: 1;
   color: #fff;
-  top: -60px;
-  /* 👈 probá -10px, -20px, etc. */
 }
-
 .hero .muted {
   color: rgba(255, 255, 255, 0.85);
 }
@@ -306,110 +267,121 @@ h1 {
   margin: 22px auto 0;
   backdrop-filter: blur(2px);
 }
-
 .search--hero input {
   height: 56px;
   font-size: 1.05rem;
   border-radius: 12px;
 }
-
 .search--hero button[type="submit"] {
   height: 56px;
   border-radius: 12px;
   font-size: 1rem;
 }
-
 .search--hero .unit {
   height: 56px;
   border-radius: 14px;
 }
 
-/* ========== “Ubicaciones recientes” en overlay, una línea ========== */
-.section-title {
-  color: #9aa0a6;
-  font-size: 0.85rem;
-  letter-spacing: 0.18rem;
-  margin: 0 0 10px;
+/* =================== TARJETAS flotantes (History / Favorites) =================== */
+.floating-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
 }
-
-.section-title--overlay {
-  color: rgba(255, 255, 255, 0.85);
-  margin: 0 0 8px;
-}
-
-.recent-wrap {
+.floating-card {
   position: relative;
-  max-width: 980px;
-  margin: 14px auto 0;
-}
-
-.recent--overlay {
-  display: flex;
-  gap: 10px;
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  padding-bottom: 4px;
-  scroll-snap-type: x proximity;
-}
-
-.recent--overlay::-webkit-scrollbar {
-  height: 6px;
-}
-
-.recent--overlay::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.25);
-  border-radius: 999px;
-}
-
-/* Tarjetas compactas */
-.recent .recent-card {
-  min-width: 190px;
-  max-width: 220px;
-  padding: 10px 12px;
-  border-radius: 10px;
-  background: rgba(0, 0, 0, 0.32);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: #fff;
+  border-radius: 16px;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
   backdrop-filter: blur(6px);
-  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.25);
+  -webkit-backdrop-filter: blur(6px);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
   cursor: pointer;
-  scroll-snap-align: start;
-  transition: transform 0.08s ease, border-color 0.15s ease,
-    background 0.15s ease;
+}
+.floating-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.2);
+  background: rgba(255, 255, 255, 0.22);
+}
+.floating-card .title {
+  margin: 0 0 4px 0;
+  font-weight: 600;
+}
+.floating-card .sub {
+  margin: 0;
+  opacity: 0.8;
+  font-size: 0.9rem;
+}
+.history .floating-card {
+  padding: 10px 12px;
 }
 
-.recent .recent-card:hover {
+/* =================== Botón estrella (Favorito) =================== */
+.fav-btn {
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 999px;
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+  transition: transform 0.1s ease, box-shadow 0.2s ease, background 0.2s ease,
+    color 0.2s ease;
+}
+.fav-btn:hover {
   transform: translateY(-1px);
-  border-color: rgba(77, 163, 255, 0.7);
-  background: rgba(0, 0, 0, 0.38);
+}
+.fav-btn:active {
+  transform: translateY(0);
+}
+.fav-btn.is-on {
+  background: radial-gradient(120% 120% at 30% 20%, #ffd54d, #ffb300);
+  color: #1a1a1a;
+  border-color: rgba(0, 0, 0, 0.15);
+  box-shadow: 0 6px 18px rgba(255, 179, 0, 0.35);
+}
+.fav-btn .star {
+  display: inline-block;
+  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.fav-btn.is-on .star {
+  transform: scale(1.15) rotate(-10deg);
+  text-shadow: 0 0 18px rgba(255, 217, 0, 0.9);
 }
 
-.recent .rc-title {
-  font-size: 1.05rem;
-  margin: 0 0 2px;
-  font-weight: 800;
+/* =================== Fondo de VIDEO a pantalla completa =================== */
+.bg {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  overflow: hidden;
+  pointer-events: none;
+}
+.bg > video {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(1.05) contrast(1.05) brightness(1.03);
+  transform: scale(1.03);
+  will-change: transform, filter;
+  backface-visibility: hidden;
 }
 
-.recent .rc-sub {
-  font-size: 0.82rem;
-  opacity: 0.9;
-  margin: 0 0 8px;
-}
-
-.recent .rc-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.recent .rc-temp {
-  font-size: 1.25rem;
-  font-weight: 800;
-}
-
-.recent .rc-meta {
-  font-size: 0.8rem;
-  opacity: 0.95;
+/* Capa de contraste sobre el video */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: radial-gradient(
+      1200px 600px at 80% 10%,
+      rgba(255, 255, 255, 0.08),
+      transparent 60%
+    ),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.16), rgba(0, 0, 0, 0.28));
+  pointer-events: none;
 }
 
 /* =========================== SKELETON =========================== */
@@ -418,7 +390,6 @@ h1 {
   overflow: hidden;
   background: var(--surface);
 }
-
 .skeleton::after {
   content: "";
   position: absolute;
@@ -432,7 +403,6 @@ h1 {
   transform: translateX(-100%);
   animation: shine 1.2s infinite;
 }
-
 @keyframes shine {
   to {
     transform: translateX(100%);
@@ -444,259 +414,141 @@ h1 {
   h1 {
     font-size: 1.8rem;
   }
-
   .big {
     font-size: 2rem;
   }
-
-  .recent .recent-card {
-    min-width: 170px;
-  }
+}
+/* --- Fondo del sitio transparente para que no “asome” negro --- */
+html,
+body {
+  background: transparent;
 }
 
-/* HERO más compacto y con la imagen “más arriba” */
-.hero {
-  position: relative;
-  background-image: url("./hero.jpg");
-  /* tu imagen */
-  background-size: cover;
-  background-position: center 30%;
-  /* 👈 sube el encuadre */
-  padding: 300px 0 300px;
-  /* 👈 antes 64px 0 160px */
-  margin-bottom: 24px;
-  /* 👈 un poco menos de separación */
-  /* Ajuste del hero para dar “aire” debajo del buscador */
-  background-position: center 30%;
-  /* encuadre un poco más arriba */
-  padding: 150px 0 220px;
-  /* altura más baja pero con espacio abajo */
-}
-
-.hero::before {
-  content: "";
-  position: absolute;
+/* --- Tarjeta gigante translúcida sobre todo el contenido --- */
+.glass-page {
+  position: fixed; /* cubre toda la ventana */
   inset: 0;
-  background: linear-gradient(
-    180deg,
-    rgba(0, 0, 0, 0.55) 0%,
-    rgba(0, 0, 0, 0.22) 40%,
-    rgba(0, 0, 0, 0) 100%
-  );
+  z-index: 0; /* sobre el video (.bg), debajo de cualquier modal */
+  overflow: auto; /* permite scroll del contenido */
+  padding: 36px 20px 48px;
+
+  /* cristal: color+transparencia y blur del fondo (video) */
+  background: rgba(14, 16, 22, 0.42); /* opacidad ajustable */
+  backdrop-filter: blur(12px) saturate(120%);
+  -webkit-backdrop-filter: blur(12px) saturate(120%);
+
+  /* borde y sombra suaves para “tarjeta” */
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
 }
 
-/* Ensanchar un poco el contenedor del contenido principal */
-main.container {
-  max-width: 1100px;
+/* si preferís esquinas redondeadas y que se vea el video alrededor: */
+/*
+.glass-page {
+  margin: 16px;
+  border-radius: 20px;
+}
+*/
+
+/* el video de fondo a pantalla completa */
+.bg {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  overflow: hidden;
+  pointer-events: none;
+}
+.bg > video {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(1.05) contrast(1.05) brightness(1.03);
+  transform: scale(1.03);
+  will-change: transform, filter;
+  backface-visibility: hidden;
 }
 
-/* antes 980px */
-/* Centrar título de recientes */
-.section-title--overlay {
-  color: rgba(255, 255, 255, 0.85);
-  margin: 0 0 8px;
-  text-align: center;
-  /* 👈 centrado */
-  letter-spacing: 0.18rem;
+/* quitamos oscurecido global extra si lo tenías */
+body::after {
+  background: transparent !important;
+}
+/* ====== Fondo de video (full-screen) ====== */
+.bg {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -2;
+  overflow: hidden;
+  pointer-events: none;
+}
+.bg > video {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(1.05) contrast(1.05) brightness(1.03);
+  transform: scale(1.03);
+  backface-visibility: hidden;
 }
 
-/* Centrar tarjetas recientes */
-.recent-wrap {
+/* ====== Tarjeta gigante translúcida con blur ====== */
+/* NO fixed: dejamos que el layout fluya y haya scroll normal */
+html,
+body {
+  background: transparent;
+} /* que no asome negro/blanco */
+.glass-page {
   position: relative;
-  max-width: 100%;
-  /* dejamos que use todo el ancho */
-  margin: 14px auto 0;
-  text-align: center;
-  /* alinea el título al centro */
+  min-height: 100vh;
+  z-index: 0; /* por encima del video */
+  padding: 36px 0 48px; /* margen interno general */
+
+  /* cristal: color + transparencia + blur del fondo */
+  background: rgba(14, 16, 22, 0.46); /* opacidad de la “tarjeta” */
+  backdrop-filter: blur(12px) saturate(120%);
+  -webkit-backdrop-filter: blur(12px) saturate(120%);
+
+  /* borde y sombra suaves */
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35) inset,
+    0 10px 30px rgba(0, 0, 0, 0.25);
 }
 
-/* Fila de tarjetas centrada, con scroll si no entran */
-.recent--overlay {
-  display: flex;
-  justify-content: center;
-  /* 👈 centradas */
-  gap: 10px;
-  flex-wrap: nowrap;
-  /* una sola línea */
-  overflow-x: auto;
-  /* scroll si no entran */
-  padding-bottom: 4px;
-  scroll-snap-type: x proximity;
+/* Si querés ver el video alrededor, enmarcando la tarjeta:
+.glass-page {
+  margin: 16px;
+  border-radius: 20px;
+  overflow: hidden;  // por si tenés sombras internas
 }
+*/
 
-/* Contenedor del overlay: flotante centrado verticalmente */
-.recent-wrap {
-  position: absolute;
-  /* 👈 lo sacamos del flujo */
-  left: 50%;
-  /* centrado horizontal */
-  transform: translateX(-50%);
-  bottom: 40px;
-  /* distancia desde el borde inferior del hero */
-  width: 100%;
+/* Asegurar que el contenido tenga buen ancho dentro de la tarjeta */
+.container {
   max-width: 980px;
-  text-align: center;
+  margin: 0 auto;
+  padding: 0 20px;
 }
 
-/* Título de recientes centrado */
-.section-title--overlay {
+/* Que el HERO tenga aire */
+.hero {
+  padding: 60px 0 80px;
+}
+.hero .container {
+  position: relative;
+  z-index: 1;
+  color: #fff;
+}
+.hero .muted {
   color: rgba(255, 255, 255, 0.85);
-  margin: 0 0 8px;
-  text-align: center;
-  letter-spacing: 0.18rem;
 }
 
-/* Fila de tarjetas centrada */
-.recent--overlay {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  padding-bottom: 4px;
-  scroll-snap-type: x proximity;
+/* Quitar cualquier overlay global que pueda oscurecer */
+body::after {
+  background: transparent !important;
 }
-
-/* --- Reset del overlay: sin absolute, centrado limpio --- */
-.recent-wrap {
-  position: static;
-  /* <- quitamos el absolute */
-  max-width: 980px;
-  margin: clamp(12px, 5vh, 40px) auto 0;
-  /* separa del buscador y se adapta a la pantalla */
-  text-align: center;
-}
-
-/* Centrado del título y tarjetas */
-.section-title--overlay {
-  color: rgba(255, 255, 255, 0.9);
-  margin: 0 0 10px;
-  text-align: center;
-  letter-spacing: 0.18rem;
-}
-
-.recent--overlay {
-  display: flex;
-  justify-content: center;
-  /* <- centradas */
-  gap: 10px;
-  flex-wrap: nowrap;
-  /* 1 línea */
-  overflow-x: auto;
-  /* scroll si no entran */
-  padding-bottom: 4px;
-  scroll-snap-type: x proximity;
-}
-
-.recent-wrap {
-  position: absolute;
-  /* 👈 flotante dentro del hero */
-  left: 50%;
-  /* 👈 centrado horizontal */
-  transform: translateX(-50%);
-  top: 85%;
-  /* 👈 controla la posición vertical */
-  width: 100%;
-  max-width: 980px;
-  text-align: center;
-}
-.fav-btn {
-  border: 1px solid var(--surface-border);
-  background: var(--surface);
-  color: var(--fg);
-  border-radius: 10px;
-  padding: 8px 10px;
-  cursor: pointer;
-  transition: transform 0.05s ease, border-color 0.15s ease,
-    background 0.15s ease;
-}
-.fav-btn[aria-pressed="true"] {
-  background: gold;
-  color: #222;
-  border-color: gold;
-  font-weight: 800;
-}
-.fav-btn:active {
-  transform: translateY(1px);
-}
-.fav-card {
-  background: var(--card);
-  border: 1px solid var(--card-border);
-  border-radius: var(--r-md);
-  padding: var(--s-3);
-}
-.fav-btn {
-  padding: 12px 14px;
-  border: 1px solid var(--surface-border);
-  background: var(--surface);
-  color: var(--fg);
-  border-radius: var(--r-sm);
-  cursor: pointer;
-}
-.fav-btn.active {
-  border-color: var(--accent);
-  background: rgba(77, 163, 255, 0.15);
-}
-/* ===== Toggle unidades + Favorito ===== */
-.unit-toggle{
-  display:flex;
-  gap:10px;
-  align-items:center;
-  margin:10px 0 22px;
-}
-
-.unit-toggle button{
-  background:var(--surface);
-  color:var(--fg);
-  border:1px solid var(--surface-border);
-  border-radius:10px;
-  padding:10px 12px;
-  cursor:pointer;
-  transition:background .15s ease, border-color .15s ease, transform .05s ease;
-}
-
-.unit-toggle button[aria-pressed="true"]{
-  background:var(--accent);
-  color:var(--accent-contrast);
-  font-weight:800;
-}
-
-#btn-fav{
-  display:inline-flex;
-  align-items:center;
-  gap:8px;
-  border-radius:999px;
-  padding:10px 14px;
-}
-#btn-fav.active{
-  background:#ffd54f;
-  color:#1a1a1a;
-  border-color:#ffd54f;
-}
-
-/* ===== Lista de favoritos ===== */
-.favorites{
-  display:flex;
-  gap:12px;
-  flex-wrap:wrap;
-  margin-bottom:8px;
-}
-
-.fav-card{
-  min-width:220px;
-  background:var(--card);
-  border:1px solid var(--card-border);
-  color:inherit;
-  border-radius:12px;
-  padding:12px 14px;
-  box-shadow:var(--card-shadow);
-  cursor:pointer;
-  transition:transform .08s ease, border-color .15s ease;
-}
-.fav-card:hover{
-  transform:translateY(-1px);
-  border-color:var(--accent);
-}
-
-.fav-title{ font-weight:800; margin:0 0 4px; }
-.fav-meta{ font-size:.9rem; opacity:.9; }
