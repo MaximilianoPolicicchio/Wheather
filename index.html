@@ -2,71 +2,106 @@
 <html lang="es">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Pronóstico del clima — Starter</title>
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <title>Pronóstico del clima</title>
+    <meta name="description" content="App simple de pronóstico del clima." />
     <link rel="stylesheet" href="./styles.css" />
   </head>
 
   <body>
-    <!-- HERO con imagen de fondo -->
-    <section class="hero">
-      <div class="container">
-        <header class="header">
-          <h1>Pronóstico del clima</h1>
-          <p class="muted">Buscá una ciudad y mirá el clima actual y los próximos días.</p>
-        </header>
+    <!-- FONDO DE VIDEO -->
+    <div class="bg" aria-hidden="true">
+      <video
+        src="./3515758-uhd_3840_2160_25fps.mp4"
+        autoplay
+        loop
+        muted
+        playsinline
+        preload="auto"
+        poster=""
+      ></video>
+    </div>
 
-        <!-- Buscador dentro del hero -->
-        <form id="search-form" class="search" autocomplete="off">
-          <label for="city" class="sr-only">Ciudad</label>
-          <input id="city" name="city" placeholder="Buscar" autocomplete="off" />
-          <button type="submit" id="btn-search">Buscar</button>
+    <!-- TARJETA GIGANTE TRANSLÚCIDA -->
+    <div class="glass-page">
+      <section class="hero">
+        <div class="container">
+          <header class="header">
+            <h1>Pronóstico del clima</h1>
+            <p class="muted">
+              Buscá una ciudad y mirá el clima actual y los próximos días.
+            </p>
+          </header>
 
-          <!-- Botones de unidad + favorito -->
-          <div class="unit">
-            <button type="button" id="unit-c" aria-pressed="true">°C</button>
-            <button type="button" id="unit-f" aria-pressed="false">°F</button>
-            <button id="btn-fav" type="button" class="fav-btn" hidden>☆ Favorito</button>
-          </div>
+          <!-- Buscador -->
+          <form id="search-form" class="search search--hero" autocomplete="off">
+            <label for="city" class="sr-only">Ciudad</label>
+            <input
+              id="city"
+              name="city"
+              placeholder="Buscar ciudad..."
+              autocomplete="off"
+            />
+            <button type="submit" id="btn-search">Buscar</button>
 
-          <!-- Estado de carga -->
-          <div id="loader" aria-live="polite" class="loader" hidden>Cargando…</div>
-        </form>
+            <!-- Unidades + Favorito -->
+            <div class="unit">
+              <button type="button" id="unit-c" aria-pressed="true">°C</button>
+              <button type="button" id="unit-f" aria-pressed="false">°F</button>
+              <button
+                id="btn-fav"
+                type="button"
+                class="fav-btn"
+                hidden
+                aria-pressed="false"
+              >
+                ☆ <span class="star">Favorito</span>
+              </button>
+            </div>
 
-        <!-- Recientes flotando sobre el hero -->
-        <div class="recent-wrap">
-          <h3 class="section-title section-title--overlay">UBICACIONES RECIENTES</h3>
-          <section id="recent" class="recent recent--overlay"></section>
+            <!-- Loader -->
+            <div id="loader" aria-live="polite" class="loader" hidden>
+              Cargando…
+            </div>
+          </form>
         </div>
-      </div>
-    </section>
-<section class="container">
-  <h3 class="section-title">HISTORIAL</h3>
-  <div id="history" class="history"></div>
-</section>
+      </section>
 
-    <!-- Favoritos (chips + tarjetas) -->
-    <section class="container">
-      <h3 class="section-title">FAVORITOS</h3>
-      <div id="favs" class="history"></div>
-      <section id="favorites" class="grid"></section>
-    </section>
+      <!-- Historial -->
+      <section class="container">
+        <h3 class="section-title">HISTORIAL</h3>
+        <div id="history" class="history"></div>
+      </section>
 
-    <!-- Estado + resultados -->
-    <main class="container">
-      <section id="status" class="status" aria-live="polite"></section>
-      <section id="current" class="card" hidden></section>
-      <section id="daily" class="grid" hidden></section>
-    </main>
+      <!-- Favoritos -->
+      <section class="container">
+        <h3 class="section-title">FAVORITOS</h3>
+        <section id="favorites"></section>
+      </section>
 
-    <footer class="container footer">
-      <small class="muted">
-        Datos por <a href="https://open-meteo.com/" target="_blank" rel="noreferrer">Open-Meteo</a>
-        • Zona horaria: America/Argentina/Buenos_Aires
-      </small>
-    </footer>
+      <!-- Estado + resultados -->
+      <main class="container">
+        <section id="status" class="status" aria-live="polite"></section>
+        <section id="current" class="card" hidden></section>
+        <section id="daily" class="grid" hidden></section>
+      </main>
 
-    <!-- Tu JS (usa los IDs anteriores) -->
+      <!-- Footer -->
+      <footer class="container footer">
+        <small class="muted">
+          Datos por
+          <a href="https://open-meteo.com/" target="_blank" rel="noreferrer"
+            >Open-Meteo</a
+          >
+          • Zona horaria: America/Argentina/Buenos_Aires
+        </small>
+      </footer>
+    </div>
+
+    <!-- JS -->
     <script type="module" src="./main.js"></script>
   </body>
 </html>
